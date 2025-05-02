@@ -2,12 +2,6 @@
 
 A server management addon for the DivHunt framework that simplifies HTTP server creation and management.
 
-## Installation
-
-```
-npm install addon-servers
-```
-
 ## Usage
 
 Import the servers module:
