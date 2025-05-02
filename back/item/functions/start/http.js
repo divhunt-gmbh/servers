@@ -65,6 +65,7 @@ servers.Fn('item.start.http', function(item)
     this.methods.data = (request) => 
     {
         return {
+            id: item.Get('id'),
             request,
             items: {},
             variables: {},
