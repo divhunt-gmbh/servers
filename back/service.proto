@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package universal;
+
+service UniversalService 
+{
+    rpc Execute (Request) returns (Response);
+}
+
+message Request 
+{
+    string function = 1;
+    string data = 2;
+}
+
+message Response 
+{
+    string data = 1;
+    int32 code = 2;
+    string message = 3;
+}

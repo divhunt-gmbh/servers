@@ -9,7 +9,8 @@ servers.Fn('item.start.http', function(item)
 
     if(instance)
     {
-        return console.log('HTTP Server already started.');
+        item.Get('onError') && item.Get('onError')('HTTP Server already started.');
+        return;
     }
 
     this.methods.init = () => 
@@ -18,12 +19,34 @@ servers.Fn('item.start.http', function(item)
         {
             const http = this.methods.data(request);
 
-            item.Get('onRequest') && item.Get('onRequest')(request, response);
-        
-            divhunt.Emit('servers.http.request', http);
-            await divhunt.Middleware('servers.http.request', http);
+            try
+            {
+                divhunt.Emit('servers.http.request.before', http);
+                await divhunt.Middleware('servers.http.request.before', http);
 
-            this.methods.respond(http, response);
+                if(item.Get('onRequest'))
+                {
+                    await Promise.resolve(item.Get('onRequest')(request, http));
+                }
+            
+                divhunt.Emit('servers.http.request.after', http);
+                await divhunt.Middleware('servers.http.request.after', http);
+
+                this.methods.respond(http, response);
+            }
+            catch(error)
+            {
+                http.error = error.message || 'Internal server error';
+                
+                item.Get('onError') && item.Get('onError')(http.error, http);
+                
+                this.methods.respond(http, response);
+            }
+        });
+        
+        httpServer.on('error', (error) =>
+        {
+            item.Get('onError') && item.Get('onError')('HTTP Server error: ' + error.message);
         });
         
         httpServer.listen(port, () =>
@@ -32,7 +55,6 @@ servers.Fn('item.start.http', function(item)
 
             item.Get('onStart') && item.Get('onStart')(httpServer);
     
-            console.log('HTTP server started on port :1', port);
             divhunt.Emit('servers.http.start', httpServer);
         });
     };
@@ -47,10 +69,19 @@ servers.Fn('item.start.http', function(item)
         };
         
         const type = types[http.response.type];
+
+        http.duration = (performance.now() - http.duration).toFixed(2);
+        
+        if(http.error)
+        {
+            response.writeHead(500, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify({ message: http.error, code: 500, duration: http.duration }));
+            return;
+        }
         
         if(type)
         {
-            const content = http.response.type === 'JSON' ? { data: http.response.data, message: http.response.message, code: http.response.code } : http.response.content;
+            const content = http.response.type === 'JSON' ? { data: http.response.data, message: http.response.message, code: http.response.code, duration: http.duration } : http.response.content;
                 
             response.writeHead(http.response.code, { 'Content-Type': type.contentType });
             response.end(type.formatter(content));
@@ -58,8 +89,10 @@ servers.Fn('item.start.http', function(item)
         else
         {
             response.writeHead(404, { 'Content-Type': 'application/json' });
-            response.end(JSON.stringify({ message: 'Unknown response type', code: 404 }));
+            response.end(JSON.stringify({ message: 'Resource not found', code: 404, duration: http.duration }));
         }
+        
+        item.Get('onComplete') && item.Get('onComplete')(http);
     };
 
     this.methods.data = (request) => 
@@ -67,8 +100,10 @@ servers.Fn('item.start.http', function(item)
         return {
             id: item.Get('id'),
             request,
+            data: servers.Fn('data.http', request),
             items: {},
             variables: {},
+            duration: performance.now(),
             response: {
                 type: 'JSON',
                 data: null,

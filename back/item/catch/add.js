@@ -7,6 +7,9 @@ servers.ItemOn('add', function(item)
         case 'http':
             item.Fn('start.HTTP');
             break;
+        case 'grpc':
+            item.Fn('start.gRPC');
+            break;
         default:
             console.log('Server type does not exist.');
     }
