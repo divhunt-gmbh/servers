@@ -102,7 +102,7 @@ servers.Fn('item.start.grpc', function(item)
             id: item.Get('id'),
             call,
             function: call.request.function,
-            data: call.request.data,
+            data: JSON.parse(call.request.data),
             items: {},
             variables: {},
             duration: performance.now(),
