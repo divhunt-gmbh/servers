@@ -1,5 +1,3 @@
-import * as grpc from '@grpc/grpc-js'
-import * as protoLoader from '@grpc/proto-loader'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
@@ -16,8 +14,14 @@ servers.Fn('item.start.grpc', function(item)
         return;
     }
 
-    this.methods.init = () =>
+    this.methods.init = async () =>
     {
+        const grpcModule = await import('@grpc/grpc-js');
+        const protoLoaderModule = await import('@grpc/proto-loader');
+
+        const grpc = grpcModule.default || grpcModule;
+        const protoLoader = protoLoaderModule.default || protoLoaderModule;
+
         const protoPath = join(dirname(fileURLToPath(import.meta.url)), '/../../../service.proto')
         
         const definition = protoLoader.loadSync(protoPath, 
@@ -37,7 +41,7 @@ servers.Fn('item.start.grpc', function(item)
         }
 
         const server = new grpc.Server(options)
-            
+        
         server.addService(universalPackage.UniversalService.service, 
         {
             execute: this.methods.execute
@@ -61,39 +65,42 @@ servers.Fn('item.start.grpc', function(item)
 
     this.methods.execute = async (call, callback) =>
     {
-        const grpc = this.methods.data(call);
+        const grpcModule = await import('@grpc/grpc-js');
+        const grpc = grpcModule.default || grpcModule;
         
-        divhunt.Emit('servers.grpc.request.before', grpc);
-        await divhunt.Middleware('servers.grpc.request.before', grpc);
+        const grpcData = this.methods.data(call);
+        
+        divhunt.Emit('servers.grpc.request.before', grpcData);
+        await divhunt.Middleware('servers.grpc.request.before', grpcData);
         
         if(item.Get('onRequest'))
         {
-            await Promise.resolve(item.Get('onRequest')(call, grpc));
+            await Promise.resolve(item.Get('onRequest')(call, grpcData));
         }
         
-        divhunt.Emit('servers.grpc.request.after', grpc);
-        await divhunt.Middleware('servers.grpc.request.after', grpc);
+        divhunt.Emit('servers.grpc.request.after', grpcData);
+        await divhunt.Middleware('servers.grpc.request.after', grpcData);
         
-        this.methods.respond(grpc, callback);
+        this.methods.respond(grpcData, callback, grpc);
     }
     
-    this.methods.respond = (grpc, callback) =>
+    this.methods.respond = (grpcData, callback, grpc) =>
     {
-        grpc.duration = (performance.now() - grpc.duration).toFixed(2);
+        grpcData.duration = (performance.now() - grpcData.duration).toFixed(2);
         
-        if(grpc.error)
+        if(grpcData.error)
         {
-            item.Get('onError') && item.Get('onError')(grpc.error, grpc);
-            return callback(new Error(grpc.error));
+            item.Get('onError') && item.Get('onError')(grpcData.error, grpcData);
+            return callback(new Error(grpcData.error));
         }
         
         callback(null, {
-            data: JSON.stringify(grpc.response.data), 
-            code: grpc.response.code, 
-            message: grpc.response.message
+            data: JSON.stringify(grpcData.response.data), 
+            code: grpcData.response.code, 
+            message: grpcData.response.message
         });
         
-        item.Get('onComplete') && item.Get('onComplete')(grpc);
+        item.Get('onComplete') && item.Get('onComplete')(grpcData);
     }
     
     this.methods.data = (call) =>
