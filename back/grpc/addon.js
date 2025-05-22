@@ -6,12 +6,10 @@ const serversGRPC = divhunt.Addon('servers.grpc', (addon) =>
     addon.Field('instance', ['object']);
     addon.Field('port', ['number', 3000]);
 
-    addon.Field('streams', ['object', {}]);
-
     addon.Field('onError', ['function']);
     addon.Field('onStart', ['function']);
     
-    addon.Field('onStream', ['function']);
+    addon.Field('onStreamConnect', ['function']);
     addon.Field('onStreamError', ['function']);
     addon.Field('onStreamClose', ['function']);
     addon.Field('onStreamEnd', ['function']);

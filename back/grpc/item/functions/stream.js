@@ -4,7 +4,6 @@ import serversGRPC from '#servers/grpc/addon.js';
 serversGRPC.Fn('item.stream', function(item, stream)
 {
     stream.id = divhunt.GenerateUID();
-    stream.service = stream.metadata.get('service')[0];
 
     /* Request Method */
 
@@ -33,11 +32,6 @@ serversGRPC.Fn('item.stream', function(item, stream)
 
         item.Get('onStreamRespond') && item.Get('onStreamRespond')(stream, {type: 'respond', data, message, code, id});
     };
-
-    /* Other */
-
-    item.Get('streams')[stream.id] = stream;
-    item.Get('onStream') && item.Get('onStream')(stream);
    
     /* Data Event */
 
@@ -58,18 +52,19 @@ serversGRPC.Fn('item.stream', function(item, stream)
     stream.on('close', () => 
     {
         item.Get('onStreamClose') && item.Get('onStreamClose')(stream);
-        delete item.Get('streams')[stream.id];
     })
 
     stream.on('error', (error) => 
     {
         item.Get('onStreamError') && item.Get('onStreamError')(stream, error);
-        delete item.Get('streams')[stream.id];
     })
 
     stream.on('end', () => 
     {
         item.Get('onStreamEnd') && item.Get('onStreamEnd')(stream);
-        delete item.Get('streams')[stream.id];
     })
+
+    /* Other */
+
+    item.Get('onStreamConnect') && item.Get('onStreamConnect')(stream);
 });
