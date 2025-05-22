@@ -1,7 +1,7 @@
 import http from 'http';
 
 import divhunt from '#framework/load.js';
-import servers from '#servers/addon.js';
+import servers from '../../../addon.js';
 
 servers.Fn('item.start.http', function(item)
 {

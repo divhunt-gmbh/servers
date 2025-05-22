@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package universal;
+
+service UniversalService 
+{
+    rpc Stream (stream Request) returns (stream Response);
+}
+
+message Request 
+{
+    string data = 1;
+}
+
+message Response 
+{
+    string data = 1;
+}

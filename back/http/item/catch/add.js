@@ -1,4 +1,4 @@
-import servers from '#servers/addon.js';
+import servers from '../../addon.js';
 
 servers.ItemOn('add', function(item)
 {
