@@ -1,13 +1,8 @@
-import servers from '#servers/addon.js';
+import serversHTTP from '#servers/http/addon.js';
 
-import './item/catch/add.js';
+import '#servers/http/functions/data.js';
 
-import './functions/data/http.js';
+import '#servers/http/item/catch/add.js';
+import '#servers/http/item/functions/start.js';
 
-import './item/functions/start/http.js';
-import './item/functions/start/gRPC.js';
-
-// import '#servers/functions/client/gRPC.js';
-// import '#workers/functions/server/gRPC.js';
-
-export default servers;
+export default serversHTTP;

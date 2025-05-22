@@ -1,19 +1,31 @@
-import servers from '../../addon.js';
+import { json } from 'node:stream/consumers';
+import serversHTTP from '#servers/http/addon.js';
 
-servers.Fn('data.http', function(request) 
+serversHTTP.Fn('data', async function(request) 
 {
     const properties = {};
     const url = new URL(request.url, `https://${request.headers.host}`);
-    const pathname = url.pathname.toLowerCase();
 
     url.searchParams.forEach((value, key) => 
     {
         properties[key] = value;
     });
 
-    if (request.method !== 'GET' && request.headers['content-type']?.includes('application/json') && request.body) 
+    if (request.method !== 'GET' && request.headers['content-type']?.includes('application/json')) 
     {
-        Object.assign(properties, request.body);
+        try 
+        {
+            const body = await json(request);
+
+            if (body && typeof body === 'object') 
+            {
+                Object.assign(properties, body);
+            }
+        }
+        catch(error)
+        {
+            // Invalid JSON, skip body parsing
+        }
     }
 
     const result = {};
@@ -46,7 +58,7 @@ servers.Fn('data.http', function(request)
                 break;
                 
             case 'boolean':
-                result[base] = ['true', '1', true].includes(value) ? true : ['false', '0', false].includes(value) ? false : null;
+                result[base] = ['true', '1', true, 1].includes(value) ? true : ['false', '0', false, 0].includes(value) ? false : null;
                 break;
                 
             case 'array':
@@ -58,12 +70,12 @@ servers.Fn('data.http', function(request)
                 {
                     try 
                     {
-                        const parsed_json = JSON.parse(value);
-                        result[base] = Array.isArray(parsed_json) ? parsed_json : value.split(',').map(item => item.trim());
+                        const parsed = JSON.parse(value);
+                        result[base] = Array.isArray(parsed) ? parsed : value.split(',').map(item => item.trim()).filter(Boolean);
                     } 
                     catch 
                     {
-                        result[base] = value.split(',').map(item => item.trim());
+                        result[base] = value.split(',').map(item => item.trim()).filter(Boolean);
                     }
                 }
                 else 
@@ -81,8 +93,8 @@ servers.Fn('data.http', function(request)
                 {
                     try 
                     {
-                        const parsed_json = JSON.parse(value);
-                        result[base] = hint === 'object' && Array.isArray(parsed_json) ? null : parsed_json;
+                        const parsed = JSON.parse(value);
+                        result[base] = (typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : null;
                     } 
                     catch 
                     {
