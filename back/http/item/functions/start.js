@@ -33,7 +33,7 @@ serversHTTP.Fn('item.start', function(item)
             JSON: { contentType: 'application/json', formatter: content => JSON.stringify(content) },
             HTML: { contentType: 'text/html', formatter: content => String(content) },
             CSS:  { contentType: 'text/css', formatter: content => String(content) },
-            JSS:  { contentType: 'application/javascript', formatter: content => String(content) }
+            JS:   { contentType: 'application/javascript', formatter: content => String(content) }
         };
         
         const type = types[http.response.type] || types.JSON;
