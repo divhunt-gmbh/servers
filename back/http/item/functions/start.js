@@ -21,7 +21,7 @@ serversHTTP.Fn('item.start', function(item)
             response: {
                 type: 'JSON',
                 data: null,
-                message: 'Request processed successfully.',
+                message: 'Request processed',
                 code: 200
             }
         };
@@ -53,9 +53,9 @@ serversHTTP.Fn('item.start', function(item)
         
         const content = http.response.type === 'JSON' ? { 
             data: http.response.data || {}, 
-            message: http.response.message, 
+            message: http.response.message || 'No response message provided.', 
             code: http.response.code, 
-            duration: http.duration 
+            time: http.time 
         } : http.response.data || '';
                 
         response.writeHead(http.response.code, { 'Content-Type': type.contentType });

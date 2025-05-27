@@ -8,6 +8,8 @@ serversGRPC.Fn('item.resolve', function(item, id, payload = null)
     {
         if(id in promises) 
         {
+            payload.time = (performance.now() - promises[id].time).toFixed(2)
+
             promises[id].resolve(payload);
             delete promises[id];
         }
@@ -18,13 +20,13 @@ serversGRPC.Fn('item.resolve', function(item, id, payload = null)
     {
         if(id in promises) 
         {
-            promises[id].reject('Request timed out after 2 seconds. No response received.');
+            promises[id].reject('Request timed out after 5 seconds. No response received.');
             delete(promises[id]);
         }
-    }, 2000);
+    }, 5000);
 
     return new Promise((resolve, reject) => 
     {
-        promises[id] = { resolve, reject };
+        promises[id] = { resolve, reject, time: performance.now() };
     });
 });
