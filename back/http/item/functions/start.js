@@ -15,7 +15,8 @@ serversHTTP.Fn('item.start', function(item)
         return {
             id: divhunt.GenerateUID(),
             request,
-            data: await serversHTTP.Fn('data', request),
+            data: await serversHTTP.Fn('extract.data', request),
+            url: new URL(request.url, `http://${request.headers.host}`),
             time: performance.now(),
             error: null,
             response: {

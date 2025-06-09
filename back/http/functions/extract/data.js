@@ -1,7 +1,7 @@
 import { json } from 'node:stream/consumers';
 import serversHTTP from '#servers/http/addon.js';
 
-serversHTTP.Fn('data', async function(request) 
+serversHTTP.Fn('extract.data', async function(request) 
 {
     const properties = {};
     const url = new URL(request.url, `https://${request.headers.host}`);
